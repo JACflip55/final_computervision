@@ -7,6 +7,17 @@ import cv2
 import cv2.cv as cv
 import math
 import numpy as np
+import moustache
+
+
+class Face(object):
+    def __init__(self):
+        self.faceRect = None
+        self.leftEyeRect = None
+        self.rightEyeRect = None
+        self.eyes = None
+        self.noseRect = None
+        self.mouthRect = None
 
 
 def _testing_balls():
@@ -149,74 +160,109 @@ def track_ball(cap, frame, x_cord, y_cord, height, width, ret):
     cv2.destroyAllWindows()
     cap.release()
     return tolist
+    
+    
+def find_eyes(frame, cascade, fallbackCascade):
+    minPairSize = (10, 10)
+    haarScale = 1.3
+    minNeighbors = 0
+    #cv2.equalizeHist(frame, frame)
 
+    eyes = cascade.detectMultiScale(frame, 1.5, 
+                        minNeighbors, cv.CV_HAAR_FIND_BIGGEST_OBJECT
+                        ,minPairSize, (99, 24))
 
-def track_ball_1(video):
-    """Track the ball's center in 'video'.
+    if len(eyes) == 0:
+        eyes = fallbackCascade.detectMultiScale(frame, 1.2,
+                        minNeighbors, cv.CV_HAAR_FIND_BIGGEST_OBJECT
+                        |cv.CV_HAAR_SCALE_IMAGE, (5,5))
 
-    Arguments:
-      video: an open cv2.VideoCapture object containing a video of a ball
-        to be tracked.
-
-    Outputs:
-      a list of (min_x, min_y, max_x, max_y) four-tuples containing the pixel
-      coordinates of the rectangular bounding box of the ball in each frame.
-    """
-    ret, frame, gray = read_and_grayscale(video)
-    x_cord, y_cord, height, width = findcircles(gray, 1)
-    return track_ball(video, frame, x_cord, y_cord, height, width, ret)
-
-
-def track_ball_2(video):
-    """As track_ball_1, but for ball_2.mov."""
-    ret, frame, gray = read_and_grayscale(video)
-    x_cord, y_cord, height, width = findcircles(gray, 2)
-    return track_ball(video, frame, x_cord, y_cord, height, width, ret)
-
-
-def track_ball_3(video):
-    """As track_ball_1, but for ball_2.mov."""
-    ret, frame, gray = read_and_grayscale(video)
-    x_cord, y_cord, height, width = findcircles(gray, 3)
-    return track_ball(video, frame, x_cord, y_cord, height, width, ret)
-
-
-def track_ball_4(video):
-    """As track_ball_1, but for ball_2.mov."""
-    ret, frame, gray = read_and_grayscale(video)
-    x_cord, y_cord, height, width = findcircles(gray, 4)
-    return track_ball(video, frame, x_cord, y_cord, height, width, ret)
+    return eyes
 
 
 def track_face(video):
-    """As track_ball_1, but for face.mov."""
     face_cascade = cv2.CascadeClassifier(
-        'haarcascade_frontalface_default.xml')
+        'haarcascades/haarcascade_frontalface_default.xml')
+    big_eye_pair_cascade = cv2.CascadeClassifier(
+        'haarcascades/haarcascade_mcs_eyepair_big.xml')
+    small_eye_pair_cascade = cv2.CascadeClassifier(
+        'haarcascades/haarcascade_mcs_eyepair_small.xml')
+    eye_cascade = cv2.CascadeClassifier(
+        'haarcascades/haarcascade_eye.xml')
+    nose_cascade = cv2.CascadeClassifier(
+        'haarcascades/haarcascade_mcs_nose.xml')
+    mouth_cascade = cv2.CascadeClassifier(
+        'haarcascades/haarcascade_mcs_mouth.xml')
     cap = video
     toList = []
+    faceColor = (255, 255, 255)  # white
+    leftEyeColor = (0, 0, 255)  # red
+    rightEyeColor = (0, 255, 255)  # yellow
+    noseColor = (0, 255, 0)  # green
+    mouthColor = (255, 0, 0)  # blue
     t = 0
+    ret, image = video.read()
+    frame_height, frame_width, frame_layers = image.shape
+    fourcc = cv.CV_FOURCC('M', 'P', '4', 'V')
+    feature_test = cv2.VideoWriter('feature_test.mov', fourcc, 30, (frame_width, frame_height))
+    first_eye = True
+    avg_w = 0
+    avg_h = 0
+    fames = 1
+    use = False
+    usen = False
     while(1):
-        ret, image = video.read()
         if ret is True:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+            #noses = nose_cascade.detectMultiScale(gray, 1.25, 5, 0|cv.CV_HAAR_SCALE_IMAGE)
+            cv2.equalizeHist(gray, gray)
+            faces = face_cascade.detectMultiScale(gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE)
+            eyes = find_eyes(gray, big_eye_pair_cascade, small_eye_pair_cascade)
+            #noses = nose_cascade.detectMultiScale(gray, 1.25, 5, 0|cv.CV_HAAR_SCALE_IMAGE)
+
+            #mouths = mouth_cascade.detectMultiScale(gray, 1.3, 2, cv.CV_HAAR_SCALE_IMAGE)
+            if len(eyes) != 0 and use:
+                (x, y, width, height) = eyes[0]
+                avg_w += width
+                avg_h += height
+                #print "\n width: " + str(width) + " height: " + str(height) + "\n"
 
             if len(faces) == 0:
                 toList.append(toList[len(toList) - 1])
-
             for (x, y, width, height) in faces:
-
                 if faces.size == 8:
                     a, b, c, d = faces[0]
                     toList.append((a, b, a + c, a + d))
                     break
-
                 toList.append((x, y, x + width, y + height))
+                print str(x) + " " + str(y)+ " " + str(x+width) + " " + str(y+height) + "\n"
+                cv2.rectangle(image, (x, y), (x+width, y+height), faceColor)
+            
+            for (x, y, width, height) in eyes:
+                cv2.rectangle(image, (x, y), (x+width, y+height), leftEyeColor)
+            if usen:
+                for (x, y, width, height) in noses:
+                    cv2.rectangle(image, (x, y), (x+width, y+height), noseColor)            
+
+            if use:
+                for (x, y, width, height) in mouths:
+                    cv2.rectangle(image, (x, y), (x+width, y+height), mouthColor)
+
+            cv2.imwrite("tracked_images/image_" + str(t) + ".jpg", image)
+            feature_test.write(image)
         else:
             break
+        t += 1
+        ret, image = video.read()
+        fames += 1
 
+    avg_w /= fames
+    avg_h /= fames
+    print "\n avg width: " + str(avg_w) + " avg height: " + str(avg_h) + "\n"
     cv2.destroyAllWindows()
     video.release()
+    feature_test.release()
+    #moustache.draw('frame_264.png', 'new.png', 244, 306)
     return toList
 
 
