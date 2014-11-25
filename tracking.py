@@ -205,15 +205,10 @@ def track_face(video):
     frame_height, frame_width, frame_layers = image.shape
     fourcc = cv.CV_FOURCC('M', 'P', '4', 'V')
     feature_test = cv2.VideoWriter('test_output/feature_test.mov', fourcc, 30, (frame_width, frame_height))
-    first_eye = True
-    avg_w = 0
-    avg_h = 0
-    fames = 1
-    use = False
-    usen = False
     
     prev_e = [0,0,0,0]
     prev_m = [0,0,0,0]
+    prev_f = [0,0,0,0]
     
     mustache_s = cv2.imread('CurlyMustache.png',-1)
     visor_s = cv2.imread('censor.png',-1)
@@ -224,61 +219,48 @@ def track_face(video):
             visor = visor_s.copy()
             
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            #noses = nose_cascade.detectMultiScale(gray, 1.25, 5, 0|cv.CV_HAAR_SCALE_IMAGE)
             cv2.equalizeHist(gray, gray)
-            faces = face_cascade.detectMultiScale(gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE)
-            #eyes = find_eyes(gray, big_eye_pair_cascade, small_eye_pair_cascade)
-            #noses = nose_cascade.detectMultiScale(gray, 1.25, 5, 0|cv.CV_HAAR_SCALE_IMAGE)
-
-            #mouths = mouth_cascade.detectMultiScale(gray, 1.3, 2, cv.CV_HAAR_SCALE_IMAGE)
-            '''if len(eyes) != 0 and use:
-                (x, y, width, height) = eyes[0]
-                avg_w += width
-                avg_h += height
-                #print "\n width: " + str(width) + " height: " + str(height) + "\n"'''
-
-            if len(faces) == 0:
-                toList.append(toList[len(toList) - 1])
-            for (x, y, width, height) in faces:
-                if faces.size == 8:
-                    a, b, c, d = faces[0]
-                    toList.append((a, b, a + c, a + d))
-                    break
-                toList.append((x, y, x + width, y + height))
-                print "(",x,",",y,") ",width,"x",height
-                face_gray = gray[y:y+height,x:x+width]
-                l_face_gray = face_gray[height/2:,:]
-                #cv2.imwrite("test_output/debug.png", l_face_gray)
-                eyes = eye_cascade.detectMultiScale(face_gray)
-                mouths = mouth_cascade.detectMultiScale(l_face_gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE)
-                #for (ex, ey, ew, eh) in eyes:
-                #cv2.rectangle(image, (ex+x, ey+y), (ex+ew+x, ey+eh+y), leftEyeColor)
-                if len(eyes) < 2:
-                    x1,y1,x2,y2 = prev_e
-                else:
-                    x1,y1 = moustache.box_center(*eyes[0])
-                    x2,y2 = moustache.box_center(*eyes[1])
-                    prev_e = [x1,y1,x2,y2]
-                visor = moustache.scale_to(visor,width)
-                visor = moustache.align_slope(visor,x1,y1,x2,y2)
-                image = moustache.draw(image,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x)
-                if len(mouths) > 0:
-                    prev_m = mouths[0]
-                mx, my, mw, mh = prev_m
-                #cv2.rectangle(image, (mx+x, my+y+height/2), (mx+x+mw, my+y+mh+height/2), mouthColor)
-                mustache = moustache.scale_to(mustache, width)
-                image = moustache.draw(image, mustache, my + y + mh / 2 + height / 2, mx + x + mw / 2)
-                cv2.rectangle(image, (x, y), (x+width, y+height), faceColor)
             
-            '''for (x, y, width, height) in eyes:
-                cv2.rectangle(image, (x, y), (x+width, y+height), leftEyeColor)'''
-            if usen:
-                for (x, y, width, height) in noses:
-                    cv2.rectangle(image, (x, y), (x+width, y+height), noseColor)            
+            faces = face_cascade.detectMultiScale(gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE | cv.CV_HAAR_FIND_BIGGEST_OBJECT)
+            
+            if len(faces) > 0:
+                prev_f = faces[0]
+                print " ",
+            else:
+                print "!",
+            x, y, width, height = prev_f
+            print ("%03d (%3d,%3d) %3d" % (t,x,y,width)),("x%3d" % (height))," ",
+            face_gray = gray[y:y+height,x:x+width]
+            l_face_gray = face_gray[height/2:,:]
+            u_face_gray = face_gray[:3*height/4,:]
+            #cv2.imwrite("test_output/debug.png", l_face_gray)
+            eyes = eye_cascade.detectMultiScale(u_face_gray)
+            mouths = mouth_cascade.detectMultiScale(l_face_gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE)
+            #for (ex, ey, ew, eh) in eyes:
+            #cv2.rectangle(image, (ex+x, ey+y), (ex+ew+x, ey+eh+y), leftEyeColor)
+            if len(eyes) != 2:
+                x1,y1,x2,y2 = prev_e
+                print "!",
+            else:
+                x1,y1 = moustache.box_center(*eyes[0])
+                x2,y2 = moustache.box_center(*eyes[1])
+                prev_e = [x1,y1,x2,y2]
+                print " ",
+            print ("%1d (%3d,%3d)--(%3d,%3d)" % (len(eyes),x1,y1,x2,y2))," "
+            visor = moustache.scale_to(visor,width)
+            visor = moustache.align_slope(visor,x1,y1,x2,y2)
+            image = moustache.draw(image,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x)
+            if len(mouths) > 0:
+                prev_m = mouths[0]
+            mx, my, mw, mh = prev_m
+            #cv2.rectangle(image, (mx+x, my+y+height/2), (mx+x+mw, my+y+mh+height/2), mouthColor)
+            mustache = moustache.scale_to(mustache, width)
+            image = moustache.draw(image, mustache, my + y + mh / 2 + height / 2, mx + x + mw / 2)
+            #cv2.rectangle(image, (x, y), (x+width, y+height), faceColor)
 
-            '''if use:
-                for (x, y, width, height) in mouths:
-                    cv2.rectangle(image, (x, y), (x+width, y+height), mouthColor)'''
+            '''if usen:
+                for (x, y, width, height) in noses:
+                    cv2.rectangle(image, (x, y), (x+width, y+height), noseColor)''' 
 
             cv2.imwrite("tracked_images/image_%(number)03d.jpg" % {"number" : t}, image)
             feature_test.write(image)
@@ -286,16 +268,10 @@ def track_face(video):
             break
         t += 1
         ret, image = video.read()
-        fames += 1
 
-    avg_w /= fames
-    avg_h /= fames
-    print "\n avg width: " + str(avg_w) + " avg height: " + str(avg_h) + "\n"
     cv2.destroyAllWindows()
     video.release()
     feature_test.release()
-    #moustache.draw('frame_264.png', 'new.png', 244, 306)
-    return toList
 
 
 def ETH_tracking(cap):
