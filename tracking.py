@@ -204,7 +204,7 @@ def track_face(video):
     ret, image = video.read()
     frame_height, frame_width, frame_layers = image.shape
     fourcc = cv.CV_FOURCC('M', 'P', '4', 'V')
-    feature_test = cv2.VideoWriter('feature_test.mov', fourcc, 30, (frame_width, frame_height))
+    feature_test = cv2.VideoWriter('test_output/feature_test.mov', fourcc, 30, (frame_width, frame_height))
     first_eye = True
     avg_w = 0
     avg_h = 0
@@ -212,7 +212,11 @@ def track_face(video):
     use = False
     usen = False
     
+    prev_e = [0,0,0,0]
+    prev_m = [0,0,0,0]
+    
     mustache = cv2.imread('CurlyMustache.png',-1)
+    visor = cv2.imread('censor.png',-1)
     
     while(1):
         if ret is True:
@@ -244,12 +248,24 @@ def track_face(video):
                 cv2.imwrite("debug.png", l_face_gray)
                 eyes = eye_cascade.detectMultiScale(face_gray)
                 mouths = mouth_cascade.detectMultiScale(l_face_gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE)
-                for (ex, ey, ew, eh) in eyes:
-                    cv2.rectangle(image, (ex+x, ey+y), (ex+ew+x, ey+eh+y), leftEyeColor)
-                for (mx, my, mw, mh) in mouths:
+                #for (ex, ey, ew, eh) in eyes:
+                #cv2.rectangle(image, (ex+x, ey+y), (ex+ew+x, ey+eh+y), leftEyeColor)
+                if len(eyes) < 2:
+                    x1,y1,x2,y2 = prev_e
+                else:
+                    x1,y1 = moustache.box_center(*eyes[0])
+                    x2,y2 = moustache.box_center(*eyes[1])
+                    prev_e = [x1,y1,x2,y2]
+                visor = moustache.scale_to(visor,width)
+                visor = moustache.align_slope(visor,x1,y1,x2,y2)
+                image = moustache.draw(image,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x)
+                if len(mouths) < 1:
+                    mx, my, mw, mh = prev_m
+                else:
+                    mx, my, mw, mh = mouths[0]
                     #cv2.rectangle(image, (mx+x, my+y+height/2), (mx+x+mw, my+y+mh+height/2), mouthColor)
-                    mustache = moustache.scale_to(mustache, width)
-                    image = moustache.draw(image, mustache, my + y + mh / 2 + height / 2, mx + x + mw / 2)
+                mustache = moustache.scale_to(mustache, width)
+                image = moustache.draw(image, mustache, my + y + mh / 2 + height / 2, mx + x + mw / 2)
                 cv2.rectangle(image, (x, y), (x+width, y+height), faceColor)
             
             '''for (x, y, width, height) in eyes:
@@ -262,7 +278,7 @@ def track_face(video):
                 for (x, y, width, height) in mouths:
                     cv2.rectangle(image, (x, y), (x+width, y+height), mouthColor)'''
 
-            cv2.imwrite("tracked_images/image_" + str(t) + ".jpg", image)
+            cv2.imwrite("tracked_images/image_%(number)03d.jpg" % {"number" : t}, image)
             feature_test.write(image)
         else:
             break

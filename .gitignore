@@ -1,3 +1,4 @@
 *.pyc
 tracked_images/**
+test_output/**
 
