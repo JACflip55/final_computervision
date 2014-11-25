@@ -7,16 +7,20 @@ def draw(src, overlay, face_y, face_x, face_w):
 	height, width = overlay.shape[:2]
 	dst = src.copy()
 	d_height, d_width = dst.shape[:2]
-
+	
+	print "[",width,",",height,"]"
+	
 	for y in range (0, height):
 		for x in range (0, width):
 			dest_x = translate(x,width,face_x)
 			dest_y = translate(y,height,face_y)
+			
 			if (dest_x >= 0) and (dest_x < d_width) and (dest_y >= 0) and (dest_y < d_height):
 				if overlay[y][x].any() != 0:
+					print "(",x,",",y,") -> (",dest_x,",",dest_y,")"
 					dst[dest_y][dest_x] = blend(dst[dest_y][dest_x], overlay[y][x])
 
-	#cv2.imwrite("debug.png", dst)
+	cv2.imwrite("debug.png", overlay)
 	return dst
 
 def translate(cord,scale,position):
@@ -29,6 +33,7 @@ def blend(base, overlay):
 def compute_scale(overlay, target):
 	height, width = overlay.shape[:2]
 	scale = 1.0 * target / width
+	print "scale: (",width,",",height,")[",target,"] --> ",scale
 	return (int(width * scale),int(height * scale))
 
 def scale_to(overlay, target):
@@ -42,6 +47,7 @@ def process_frame(frame,dst_fname):
 	
 	mustache = cv2.imread('CurlyMustache.png',-1)
 	monocle = cv2.imread('monocle.png',-1)
+	visor = cv2.imread('visor_b.png',-1)
 	
 	faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2,
                         minNeighbors=4,
@@ -50,7 +56,7 @@ def process_frame(frame,dst_fname):
 	for (x, y, w, h) in faces:
 		print "(",x,",",y,") [",w,",",h,"]"
 		face_gray = gray[y:y+h, x:x+w]
-		mouth = mouth_cascade.detectMultiScale(face_gray,
+		'''mouth = mouth_cascade.detectMultiScale(face_gray,
 						flags=cv2.cv.CV_HAAR_SCALE_IMAGE |
                         cv2.cv.CV_HAAR_FIND_BIGGEST_OBJECT)
 		(mx, my, mw, mh) = mouth[0]
@@ -62,9 +68,31 @@ def process_frame(frame,dst_fname):
 		(ex, ey, ew, eh) = eye[1]
 		print "(",ex,",",ey,") [",ew,",",eh,"]"
 		print "<",(ey + y + eh / 2),",",(ex + x + ew / 2),">"
-		frame = draw(frame, monocle, ey + y + eh / 2, ex + x + ew / 2, int(w/3.5))
+		frame = draw(frame, monocle, ey + y + eh / 2, ex + x + ew / 2, int(w/3.5))'''
+		eye = eye_cascade.detectMultiScale(face_gray,
+						flags=cv2.cv.CV_HAAR_SCALE_IMAGE)
+		x1,y1 = box_center(*eye[0])
+		x2,y2 = box_center(*eye[1])
+		print "(",x1,",",y1,") (",x2,",",y2,")"
+		print "<",((y1 + y2) / 2 + y),",",((x1 + x2) / 2 + x),">"
+		#visor = align_slope(visor,x1,y1,x2,y2)
+		frame = draw(frame,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x, w)
 
 	cv2.imwrite(dst_fname, frame)
+
+def align_slope(overlay,x1,y1,x2,y2):
+	height, width = overlay.shape[:2]
+	print "[",width,",",height,"]"
+	theta = math.degrees(math.atan2((y1 - y2),(x1 - x2)))
+	print "theta: ",theta
+	matrix = cv2.getRotationMatrix2D((height/2,width/2),90,1)
+	img = cv2.warpAffine(overlay,matrix,(height, width))
+	height, width = img.shape[:2]
+	print "[",width,",",height,"]"
+	return img
+
+def box_center(x,y,w,h):
+	return (x + w / 2, y + h / 2)
 
 def test():
 	process_frame(cv2.imread('frame_264.png'),'new.png')
