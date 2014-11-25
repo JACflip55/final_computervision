@@ -182,17 +182,17 @@ def find_eyes(frame, cascade, fallbackCascade):
 
 def track_face(video):
     face_cascade = cv2.CascadeClassifier(
-        'haarcascades/haarcascade_frontalface_default.xml')
+        'haarcascade_frontalface_default.xml')
     big_eye_pair_cascade = cv2.CascadeClassifier(
-        'haarcascades/haarcascade_mcs_eyepair_big.xml')
+        'haarcascade_mcs_eyepair_big.xml')
     small_eye_pair_cascade = cv2.CascadeClassifier(
-        'haarcascades/haarcascade_mcs_eyepair_small.xml')
+        'haarcascade_mcs_eyepair_small.xml')
     eye_cascade = cv2.CascadeClassifier(
-        'haarcascades/haarcascade_eye.xml')
+        'haarcascade_eye.xml')
     nose_cascade = cv2.CascadeClassifier(
-        'haarcascades/haarcascade_mcs_nose.xml')
+        'haarcascade_mcs_nose.xml')
     mouth_cascade = cv2.CascadeClassifier(
-        'haarcascades/haarcascade_mcs_mouth.xml')
+        'haarcascade_mcs_mouth.xml')
     cap = video
     toList = []
     faceColor = (255, 255, 255)  # white
@@ -211,21 +211,24 @@ def track_face(video):
     fames = 1
     use = False
     usen = False
+    
+    mustache = cv2.imread('CurlyMustache.png',-1)
+    
     while(1):
         if ret is True:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             #noses = nose_cascade.detectMultiScale(gray, 1.25, 5, 0|cv.CV_HAAR_SCALE_IMAGE)
             cv2.equalizeHist(gray, gray)
             faces = face_cascade.detectMultiScale(gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE)
-            eyes = find_eyes(gray, big_eye_pair_cascade, small_eye_pair_cascade)
+            #eyes = find_eyes(gray, big_eye_pair_cascade, small_eye_pair_cascade)
             #noses = nose_cascade.detectMultiScale(gray, 1.25, 5, 0|cv.CV_HAAR_SCALE_IMAGE)
 
             #mouths = mouth_cascade.detectMultiScale(gray, 1.3, 2, cv.CV_HAAR_SCALE_IMAGE)
-            if len(eyes) != 0 and use:
+            '''if len(eyes) != 0 and use:
                 (x, y, width, height) = eyes[0]
                 avg_w += width
                 avg_h += height
-                #print "\n width: " + str(width) + " height: " + str(height) + "\n"
+                #print "\n width: " + str(width) + " height: " + str(height) + "\n"'''
 
             if len(faces) == 0:
                 toList.append(toList[len(toList) - 1])
@@ -235,18 +238,29 @@ def track_face(video):
                     toList.append((a, b, a + c, a + d))
                     break
                 toList.append((x, y, x + width, y + height))
-                print str(x) + " " + str(y)+ " " + str(x+width) + " " + str(y+height) + "\n"
+                print "(",x,",",y,") ",width,"x",height
+                face_gray = gray[y:y+height,x:x+width]
+                l_face_gray = face_gray[height/2:,:]
+                cv2.imwrite("debug.png", l_face_gray)
+                eyes = eye_cascade.detectMultiScale(face_gray)
+                mouths = mouth_cascade.detectMultiScale(l_face_gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE)
+                for (ex, ey, ew, eh) in eyes:
+                    cv2.rectangle(image, (ex+x, ey+y), (ex+ew+x, ey+eh+y), leftEyeColor)
+                for (mx, my, mw, mh) in mouths:
+                    #cv2.rectangle(image, (mx+x, my+y+height/2), (mx+x+mw, my+y+mh+height/2), mouthColor)
+                    mustache = moustache.scale_to(mustache, width)
+                    image = moustache.draw(image, mustache, my + y + mh / 2 + height / 2, mx + x + mw / 2)
                 cv2.rectangle(image, (x, y), (x+width, y+height), faceColor)
             
-            for (x, y, width, height) in eyes:
-                cv2.rectangle(image, (x, y), (x+width, y+height), leftEyeColor)
+            '''for (x, y, width, height) in eyes:
+                cv2.rectangle(image, (x, y), (x+width, y+height), leftEyeColor)'''
             if usen:
                 for (x, y, width, height) in noses:
                     cv2.rectangle(image, (x, y), (x+width, y+height), noseColor)            
 
-            if use:
+            '''if use:
                 for (x, y, width, height) in mouths:
-                    cv2.rectangle(image, (x, y), (x+width, y+height), mouthColor)
+                    cv2.rectangle(image, (x, y), (x+width, y+height), mouthColor)'''
 
             cv2.imwrite("tracked_images/image_" + str(t) + ".jpg", image)
             feature_test.write(image)
