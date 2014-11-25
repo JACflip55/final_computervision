@@ -19,9 +19,52 @@ def draw(src, overlay, face_y, face_x):
 					#print "(",x,",",y,") -> (",dest_x,",",dest_y,")"
 					dst[dest_y][dest_x] = blend(dst[dest_y][dest_x], overlay[y][x])
 
-	#cv2.imwrite("debug.png", overlay)
+	
 	return dst
 
+def blit_draw(src, overlay, face_y, face_x):
+	height, width = overlay.shape[:2]
+	d_height, d_width = src.shape[:2]
+	
+	x1a = translate(0,width,face_x)
+	y1a = translate(0,height,face_y)
+	x2 = min(x1a+width,d_width)
+	y2 = min(y1a+height,d_height)
+	x1 = max(x1a,0)
+	y1 = max(y1a,0)
+	
+	ex1 = max(-x1a,0)
+	ey1 = max(-y1a,0)
+	ex2 = x2 - x1a
+	ey2 = y2 - y1a
+	
+	zoom = src[y1:y2,x1:x2]
+	overlay = overlay[ey1:ey2,ex1:ex2]
+	
+	height, width = overlay.shape[:2]
+	
+	#main = numpy.zeros((height,width,3), dtype=numpy.uint8)
+	#alpha = numpy.zeros((height,width,), dtype=numpy.uint8)
+	#cv2.mixChannels(overlay,(main,alpha),(0,0,1,1,2,2,3,3))
+	b,g,r,a = cv2.split(overlay)
+	main = cv2.merge((b,g,r))
+	alpha = cv2.merge((a,a,a))
+	beta = 255 - alpha
+	
+	main_b = cv2.multiply(main,alpha,dtype=cv2.CV_16U)
+	main = cv2.convertScaleAbs(main_b,alpha=1.0/256)
+	
+	zoom_b = cv2.multiply(zoom,beta,dtype=cv2.CV_16U)
+	zoom[:,:,:] = cv2.convertScaleAbs(zoom_b,alpha=1.0/256)[:,:,:]
+	
+	zoom += main
+	
+	#cv2.imwrite("test_output/debug.png", zoom)
+	
+	return src
+	
+	
+	
 def translate(cord,scale,position):
 	return position + cord - (scale / 2)
 

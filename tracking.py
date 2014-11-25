@@ -249,13 +249,13 @@ def track_face(video):
             print ("%1d (%3d,%3d)--(%3d,%3d)" % (len(eyes),x1,y1,x2,y2))," "
             visor = moustache.scale_to(visor,width)
             visor = moustache.align_slope(visor,x1,y1,x2,y2)
-            image = moustache.draw(image,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x)
+            image = moustache.blit_draw(image,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x)
             if len(mouths) > 0:
                 prev_m = mouths[0]
             mx, my, mw, mh = prev_m
             #cv2.rectangle(image, (mx+x, my+y+height/2), (mx+x+mw, my+y+mh+height/2), mouthColor)
             mustache = moustache.scale_to(mustache, width)
-            image = moustache.draw(image, mustache, my + y + mh / 2 + height / 2, mx + x + mw / 2)
+            image = moustache.blit_draw(image, mustache, my + y + mh / 2 + height / 2, mx + x + mw / 2)
             #cv2.rectangle(image, (x, y), (x+width, y+height), faceColor)
 
             '''if usen:
