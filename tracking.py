@@ -211,7 +211,7 @@ def track_face(video):
     prev_f = [0,0,0,0]
     
     mustache_s = cv2.imread('CurlyMustache.png',-1)
-    visor_s = cv2.imread('censor.png',-1)
+    visor_s = cv2.imread('visor.png',-1)
     
     while(1):
         if ret is True:

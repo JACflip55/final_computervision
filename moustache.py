@@ -87,7 +87,7 @@ def process_frame(frame):
 def align_slope(overlay,x1,y1,x2,y2):
 	height, width = overlay.shape[:2]
 	#print "[",width,",",height,"]"
-	theta = math.degrees(math.atan2((y1 - y2),(x1 - x2)))
+	theta = math.degrees(math.atan2((y1 - y2),abs(x1 - x2)))
 	#print "theta: ",theta
 	matrix = cv2.getRotationMatrix2D((height/2,width/2),-theta,1)
 	img = cv2.warpAffine(overlay,matrix,(width, width))
