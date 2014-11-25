@@ -1,13 +1,10 @@
-
 import cv2
 import math
 import numpy
 
-s_fname = 'CurlyMustache.png'
-
-def draw(src, face_y, face_x, face_w):
-	mustache = scale_to(cv2.imread(s_fname,-1),face_w)
-	height, width = mustache.shape[:2]
+def draw(src, overlay, face_y, face_x, face_w):
+	overlay = scale_to(overlay,face_w)
+	height, width = overlay.shape[:2]
 	dst = src.copy()
 	d_height, d_width = dst.shape[:2]
 
@@ -16,8 +13,8 @@ def draw(src, face_y, face_x, face_w):
 			dest_x = translate(x,width,face_x)
 			dest_y = translate(y,height,face_y)
 			if (dest_x >= 0) and (dest_x < d_width) and (dest_y >= 0) and (dest_y < d_height):
-				if mustache[y][x].any() != 0:
-					dst[dest_y][dest_x] = blend(dst[dest_y][dest_x], mustache[y][x])
+				if overlay[y][x].any() != 0:
+					dst[dest_y][dest_x] = blend(dst[dest_y][dest_x], overlay[y][x])
 
 	#cv2.imwrite("debug.png", dst)
 	return dst
@@ -35,12 +32,16 @@ def compute_scale(overlay, target):
 	return (int(width * scale),int(height * scale))
 
 def scale_to(overlay, target):
-	return cv2.resize(overlay,compute_scale(overlay,target))
+	return cv2.resize(overlay,compute_scale(overlay,target),interpolation = cv2.INTER_AREA)
 
 def process_frame(frame,dst_fname):
 	face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 	mouth_cascade = cv2.CascadeClassifier('haarcascade_mcs_mouth.xml')
+	eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	
+	mustache = cv2.imread('CurlyMustache.png',-1)
+	monocle = cv2.imread('monocle.png',-1)
 	
 	faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2,
                         minNeighbors=4,
@@ -55,7 +56,13 @@ def process_frame(frame,dst_fname):
 		(mx, my, mw, mh) = mouth[0]
 		print "(",mx,",",my,") [",mw,",",mh,"]"
 		print "<",(my + y + mh / 2),",",(mx + x + mw / 2),">"
-		frame = draw(frame, my + y + mh / 2, mx + x + mw / 2, w)
+		frame = draw(frame, mustache, my + y + mh / 2, mx + x + mw / 2, w)
+		eye = eye_cascade.detectMultiScale(face_gray,
+						flags=cv2.cv.CV_HAAR_SCALE_IMAGE)
+		(ex, ey, ew, eh) = eye[1]
+		print "(",ex,",",ey,") [",ew,",",eh,"]"
+		print "<",(ey + y + eh / 2),",",(ex + x + ew / 2),">"
+		frame = draw(frame, monocle, ey + y + eh / 2, ex + x + ew / 2, int(w/3.5))
 
 	cv2.imwrite(dst_fname, frame)
 
