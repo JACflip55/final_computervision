@@ -215,11 +215,14 @@ def track_face(video):
     prev_e = [0,0,0,0]
     prev_m = [0,0,0,0]
     
-    mustache = cv2.imread('CurlyMustache.png',-1)
-    visor = cv2.imread('censor.png',-1)
+    mustache_s = cv2.imread('CurlyMustache.png',-1)
+    visor_s = cv2.imread('censor.png',-1)
     
     while(1):
         if ret is True:
+            mustache = mustache_s.copy()
+            visor = visor_s.copy()
+            
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             #noses = nose_cascade.detectMultiScale(gray, 1.25, 5, 0|cv.CV_HAAR_SCALE_IMAGE)
             cv2.equalizeHist(gray, gray)
@@ -259,11 +262,10 @@ def track_face(video):
                 visor = moustache.scale_to(visor,width)
                 visor = moustache.align_slope(visor,x1,y1,x2,y2)
                 image = moustache.draw(image,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x)
-                if len(mouths) < 1:
-                    mx, my, mw, mh = prev_m
-                else:
-                    mx, my, mw, mh = mouths[0]
-                    #cv2.rectangle(image, (mx+x, my+y+height/2), (mx+x+mw, my+y+mh+height/2), mouthColor)
+                if len(mouths) > 0:
+                    prev_m = mouths[0]
+                mx, my, mw, mh = prev_m
+                #cv2.rectangle(image, (mx+x, my+y+height/2), (mx+x+mw, my+y+mh+height/2), mouthColor)
                 mustache = moustache.scale_to(mustache, width)
                 image = moustache.draw(image, mustache, my + y + mh / 2 + height / 2, mx + x + mw / 2)
                 cv2.rectangle(image, (x, y), (x+width, y+height), faceColor)
