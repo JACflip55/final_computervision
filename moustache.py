@@ -38,7 +38,7 @@ def compute_scale(overlay, target):
 def scale_to(overlay, target):
 	return cv2.resize(overlay,compute_scale(overlay,target),interpolation = cv2.INTER_AREA)
 
-def process_frame(frame,dst_fname):
+def process_frame(frame):
 	face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 	mouth_cascade = cv2.CascadeClassifier('haarcascade_mcs_mouth.xml')
 	eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
@@ -57,14 +57,14 @@ def process_frame(frame,dst_fname):
 	for (x, y, w, h) in faces:
 		#print "(",x,",",y,") [",w,",",h,"]"
 		face_gray = gray[y:y+h, x:x+w]
-		mouth = mouth_cascade.detectMultiScale(face_gray,
+		'''mouth = mouth_cascade.detectMultiScale(face_gray,
 						flags=cv2.cv.CV_HAAR_SCALE_IMAGE |
                         cv2.cv.CV_HAAR_FIND_BIGGEST_OBJECT)
 		(mx, my, mw, mh) = mouth[0]
 		#print "(",mx,",",my,") [",mw,",",mh,"]"
 		#print "<",(my + y + mh / 2),",",(mx + x + mw / 2),">"
 		mustache = scale_to(mustache, w)
-		frame = draw(frame, mustache, my + y + mh / 2, mx + x + mw / 2)
+		frame = draw(frame, mustache, my + y + mh / 2, mx + x + mw / 2)'''
 		'''eye = eye_cascade.detectMultiScale(face_gray,
 						flags=cv2.cv.CV_HAAR_SCALE_IMAGE)
 		(ex, ey, ew, eh) = eye[1]
@@ -82,7 +82,7 @@ def process_frame(frame,dst_fname):
 		visor = align_slope(visor,x1,y1,x2,y2)
 		frame = draw(frame,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x)
 
-	cv2.imwrite(dst_fname, frame)
+	return frame
 
 def align_slope(overlay,x1,y1,x2,y2):
 	height, width = overlay.shape[:2]
@@ -99,4 +99,4 @@ def box_center(x,y,w,h):
 	return (x + w / 2, y + h / 2)
 
 def test():
-	process_frame(cv2.imread('frame_264.png'),'new.png')
+	cv2.imwrite('new.png',process_frame(cv2.imread('frame_264.png')))
