@@ -245,7 +245,7 @@ def track_face(video):
                 print "(",x,",",y,") ",width,"x",height
                 face_gray = gray[y:y+height,x:x+width]
                 l_face_gray = face_gray[height/2:,:]
-                cv2.imwrite("debug.png", l_face_gray)
+                #cv2.imwrite("test_output/debug.png", l_face_gray)
                 eyes = eye_cascade.detectMultiScale(face_gray)
                 mouths = mouth_cascade.detectMultiScale(l_face_gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE)
                 #for (ex, ey, ew, eh) in eyes:

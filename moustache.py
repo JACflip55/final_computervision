@@ -99,4 +99,4 @@ def box_center(x,y,w,h):
 	return (x + w / 2, y + h / 2)
 
 def test():
-	cv2.imwrite('new.png',process_frame(cv2.imread('frame_264.png')))
+	cv2.imwrite('test_output/new.png',process_frame(cv2.imread('frame_264.png')))
