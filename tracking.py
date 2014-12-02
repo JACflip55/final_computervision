@@ -1,94 +1,8 @@
-"""Project 3: Tracking.
-
-In this project, you'll track objects in videos.
-"""
-
 import cv2
 import cv2.cv as cv
 import math
 import numpy as np
 import moustache
-
-
-class Face(object):
-    def __init__(self):
-        self.faceRect = None
-        self.leftEyeRect = None
-        self.rightEyeRect = None
-        self.eyes = None
-        self.noseRect = None
-        self.mouthRect = None
-
-
-def _testing_balls():
-
-    filename = "test_data/ball_3_frames/frame_%03d.png"
-    video = cv2.VideoCapture(filename)
-    bounds = track_ball_3(video)
-
-
-def _test_face():
-
-    filename = "test_data/face_frames/frame_%03d.png"
-    video = cv2.VideoCapture(filename)
-    bounds = track_face(video)
-
-
-def _test_ETH():
-
-    filename = "test_data/seq_eth/seq_eth.avi"
-    video = cv2.VideoCapture(filename)
-    bounds = ETH_tracking(video)
-
-
-def read_and_grayscale(video):
-    """
-    Arguments: Video same as original argument
-    Reads the first frame and coverts it grayscale
-
-    Outputs
-    ret: is the next frame in the sequence
-    frame: the current frame
-    gray: grayscale image
-    """
-    ret, frame = video.read()
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    return ret, frame, gray
-
-
-def findcircles(gray, part):
-    """
-    Finds the intial points (x,y and the radius) for the circles.
-    HoughCircles does the detection of the circles for each part
-
-    Arguments:
-    gray: grayscale Image input
-    part: the problem number (1-4)
-
-    Outputs:
-    _x_cord, _y_cord, _height, _width: X and Y coordinates
-    and the height and width of the bounding box
-    """
-    if part == 3:
-        c = cv2.HoughCircles(gray, cv.CV_HOUGH_GRADIENT, 50, 100)
-        _x_cord = int(c[0][0][0] - c[0][0][2] - 1)
-        _y_cord = c[0][0][1] - c[0][0][2]
-        _height = int(1.5 * c[0][0][2])
-        _width = int(1.5 * c[0][0][2])
-        return _x_cord, _y_cord, _height, _width
-    elif part != 4:
-        c = cv2.HoughCircles(gray, cv.CV_HOUGH_GRADIENT, 3, 1)
-    else:
-        c = cv2.HoughCircles(gray, cv.CV_HOUGH_GRADIENT, 5, 1)
-    if c is not None:
-        _x_cord = c[0][0][0] - c[0][0][2]
-        _y_cord = c[0][0][1] - c[0][0][2]
-        _height = int(2 * c[0][0][2])
-        _width = int(2 * c[0][0][2])
-        return _x_cord, _y_cord, _height, _width
-    else:
-        return 0, 0, 10, 10
-
 
 def _ROI_tracking(frame, x_cord, height, y_cord, width):
     """
@@ -105,80 +19,6 @@ def _ROI_tracking(frame, x_cord, height, y_cord, width):
     roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
     cv2.normalize(roi_hist, roi_hist, 0, 180, cv2.NORM_MINMAX)
     return roi_hist
-
-
-def _term_crit():
-    """ finds the criteria for stopping the algorithm
-        if a specific accuracy is met
-        # Setup the termination criteria, either
-        10 iteration or move by atleast 1 # pt
-     """
-
-    return (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1)
-
-
-def track_ball(cap, frame, x_cord, y_cord, height, width, ret):
-    """
-    Arguments:
-    cap: is the video that is passed in the original arguments
-    frame: The current frame the video is on.
-    x_cord: The min x coordinate of the bounding box in the intial frame
-    y_cord: The min y coordinate of the bounding box in the intial frame
-    height: The height  of the bounding box region
-    Width: The width of the bounding box region
-
-    Outputs:
-    A list of four-tuples containing the four edges of the bounding box
-    """
-    roi_hist = _ROI_tracking(frame, x_cord, y_cord, height, width)
-    term_crit = _term_crit()
-    track_window = (x_cord, y_cord, height, width)
-    tolist = [(x_cord, y_cord, height, width)]
-    while(1):
-        ret, frame = cap.read()
-
-        if ret is True:
-            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            dst = cv2.calcBackProject([hsv], [0], roi_hist, [0, 180], 1)
-            # apply meanshift to get the new location
-            ret, track_window = cv2.meanShift(dst, track_window, term_crit)
-            # Draw it on image
-            x, y, width, height = track_window
-            tolist.append((x, y, x + width, y + height))
-            """
-            cv2.imshow('img2', frame)
-
-            k = cv2.waitKey(60) & 0xff
-            if k == 27:
-                break
-            else:
-                cv2.imwrite(chr(k) + ".jpg", img2)
-                """
-        else:
-            break
-
-    cv2.destroyAllWindows()
-    cap.release()
-    return tolist
-    
-    
-def find_eyes(frame, cascade, fallbackCascade):
-    minPairSize = (10, 10)
-    haarScale = 1.3
-    minNeighbors = 0
-    #cv2.equalizeHist(frame, frame)
-
-    eyes = cascade.detectMultiScale(frame, 1.5, 
-                        minNeighbors, cv.CV_HAAR_FIND_BIGGEST_OBJECT
-                        ,minPairSize, (99, 24))
-
-    if len(eyes) == 0:
-        eyes = fallbackCascade.detectMultiScale(frame, 1.2,
-                        minNeighbors, cv.CV_HAAR_FIND_BIGGEST_OBJECT
-                        |cv.CV_HAAR_SCALE_IMAGE, (5,5))
-
-    return eyes
-
 
 def track_face(video):
     face_cascade = cv2.CascadeClassifier(
@@ -273,20 +113,3 @@ def track_face(video):
     cv2.destroyAllWindows()
     video.release()
     feature_test.release()
-
-
-def ETH_tracking(cap):
-
-    fgbg = cv2.BackgroundSubtractorMOG2()
-    while(1):
-        ret, frame = cap.read()
-
-        fgmask = fgbg.apply(frame)
-
-        cv2.imshow('frame', fgmask)
-        k = cv2.waitKey(30) & 0xff
-        if k == 27:
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
