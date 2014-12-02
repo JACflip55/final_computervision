@@ -87,6 +87,23 @@ def compute_scale(overlay, target):
 def scale_to(overlay, target):
 	return cv2.resize(overlay,compute_scale(overlay,target),interpolation = cv2.INTER_AREA)
 
+def align_slope(overlay,x1,y1,x2,y2):
+	height, width = overlay.shape[:2]
+	#print "[",width,",",height,"]"
+	theta = math.degrees(math.atan2((y1 - y2),abs(x1 - x2)))
+	#print "theta: ",theta
+	matrix = cv2.getRotationMatrix2D((height/2,width/2),-theta,1)
+	img = cv2.warpAffine(overlay,matrix,(width, width))
+	height, width = img.shape[:2]
+	#print "[",width,",",height,"]"
+	return img
+
+def box_center(x,y,w,h):
+	return (x + w / 2, y + h / 2)
+
+def test():
+	cv2.imwrite('test_output/new.png',process_frame(cv2.imread('frame_264.png')))
+
 def process_frame(frame):
 	face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 	mouth_cascade = cv2.CascadeClassifier('haarcascade_mcs_mouth.xml')
@@ -132,20 +149,3 @@ def process_frame(frame):
 		frame = draw(frame,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x)
 
 	return frame
-
-def align_slope(overlay,x1,y1,x2,y2):
-	height, width = overlay.shape[:2]
-	#print "[",width,",",height,"]"
-	theta = math.degrees(math.atan2((y1 - y2),abs(x1 - x2)))
-	#print "theta: ",theta
-	matrix = cv2.getRotationMatrix2D((height/2,width/2),-theta,1)
-	img = cv2.warpAffine(overlay,matrix,(width, width))
-	height, width = img.shape[:2]
-	#print "[",width,",",height,"]"
-	return img
-
-def box_center(x,y,w,h):
-	return (x + w / 2, y + h / 2)
-
-def test():
-	cv2.imwrite('test_output/new.png',process_frame(cv2.imread('frame_264.png')))
