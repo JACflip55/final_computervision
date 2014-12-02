@@ -52,7 +52,7 @@ def blit_draw(src, overlay, face_y, face_x):
 	b,g,r,a = cv2.split(overlay) # split out channels
 	main = cv2.merge((b,g,r))    # make color channels for overlay
 	alpha = cv2.merge((a,a,a))   # create alpha mask
-	beta = 255 - alphh           # create inverse alpha mask
+	beta = 255 - alpha           # create inverse alpha mask
 	
 	main_b = cv2.multiply(main,alpha,dtype=cv2.CV_16U) # multiply overlay by mask, 8b*8b->16b
 	main = cv2.convertScaleAbs(main_b,alpha=1.0/256)   # scale back down from 16b->8b
@@ -111,10 +111,10 @@ def process_frame(frame):
 	#snose_cascade = cv2.CascadeClassifier('haarcascade_mcs_nose.xml')
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	
-	mustache = cv2.imread('Assets/CurlyMustache.png',-1)
-	monocle = cv2.imread('Assets/monocle.png',-1)
-	visor = cv2.imread('Assets/visor_b.png',-1)
-	target = cv2.imread('Assets/target.png',-1)
+	mustache = cv2.imread('Assets/Mustaches/CurlyMustache.png',-1)
+	monocle = cv2.imread('Assets/Eyes/monocle.png',-1)
+	visor = cv2.imread('Assets/Eyes/visor_b.png',-1)
+	target = cv2.imread('Assets/Eyes/target.png',-1)
 	
 	faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2,
                         minNeighbors=4,

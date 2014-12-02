@@ -50,8 +50,8 @@ def track_face(video):
     prev_m = [0,0,0,0]
     prev_f = [0,0,0,0]
     
-    mustache_s = cv2.imread('Assets/CurlyMustache.png',-1)
-    visor_s = cv2.imread('Assets/visor.png',-1)
+    mustache_s = cv2.imread('Assets/Mustache/CurlyMustache.png',-1)
+    visor_s = cv2.imread('Assets/Eyes/visor.png',-1)
     
     while(1):
         if ret is True:

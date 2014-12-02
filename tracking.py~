@@ -22,17 +22,17 @@ def _ROI_tracking(frame, x_cord, height, y_cord, width):
 
 def track_face(video):
     face_cascade = cv2.CascadeClassifier(
-        'haarcascade_frontalface_default.xml')
+        'haarcascades/haarcascade_frontalface_default.xml')
     big_eye_pair_cascade = cv2.CascadeClassifier(
-        'haarcascade_mcs_eyepair_big.xml')
+        'haarcascades/haarcascade_mcs_eyepair_big.xml')
     small_eye_pair_cascade = cv2.CascadeClassifier(
-        'haarcascade_mcs_eyepair_small.xml')
+        'haarcascades/haarcascade_mcs_eyepair_small.xml')
     eye_cascade = cv2.CascadeClassifier(
-        'haarcascade_eye.xml')
+        'haarcascades/haarcascade_eye.xml')
     nose_cascade = cv2.CascadeClassifier(
-        'haarcascade_mcs_nose.xml')
+        'haarcascades/haarcascade_mcs_nose.xml')
     mouth_cascade = cv2.CascadeClassifier(
-        'haarcascade_mcs_mouth.xml')
+        'haarcascades/haarcascade_mcs_mouth.xml')
     cap = video
     toList = []
     faceColor = (255, 255, 255)  # white
@@ -44,14 +44,14 @@ def track_face(video):
     ret, image = video.read()
     frame_height, frame_width, frame_layers = image.shape
     fourcc = cv.CV_FOURCC('M', 'P', '4', 'V')
-    feature_test = cv2.VideoWriter('test_output/feature_test.avi', fourcc, 30, (frame_width, frame_height))
+    feature_test = cv2.VideoWriter('test_output/feature_test.mov', fourcc, 30, (frame_width, frame_height))
     
     prev_e = [0,0,0,0]
     prev_m = [0,0,0,0]
     prev_f = [0,0,0,0]
     
-    mustache_s = cv2.imread('CurlyMustache.png',-1)
-    visor_s = cv2.imread('visor.png',-1)
+    mustache_s = cv2.imread('Assets/CurlyMustache.png',-1)
+    visor_s = cv2.imread('Assets/visor.png',-1)
     
     while(1):
         if ret is True:
