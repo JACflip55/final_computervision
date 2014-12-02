@@ -204,7 +204,7 @@ def track_face(video):
     ret, image = video.read()
     frame_height, frame_width, frame_layers = image.shape
     fourcc = cv.CV_FOURCC('M', 'P', '4', 'V')
-    feature_test = cv2.VideoWriter('test_output/feature_test.mov', fourcc, 30, (frame_width, frame_height))
+    feature_test = cv2.VideoWriter('test_output/feature_test.avi', fourcc, 30, (frame_width, frame_height))
     
     prev_e = [0,0,0,0]
     prev_m = [0,0,0,0]
@@ -224,7 +224,7 @@ def track_face(video):
             faces = face_cascade.detectMultiScale(gray, 1.3, 5, cv.CV_HAAR_SCALE_IMAGE | cv.CV_HAAR_FIND_BIGGEST_OBJECT)
             
             if len(faces) > 0:
-                prev_f = faces[0]
+                prev_f = moustache.markov_add(prev_f,faces[0])
                 print " ",
             else:
                 print "!",
@@ -242,16 +242,17 @@ def track_face(video):
                 x1,y1,x2,y2 = prev_e
                 print "!",
             else:
-                x1,y1 = moustache.box_center(*eyes[0])
-                x2,y2 = moustache.box_center(*eyes[1])
-                prev_e = [x1,y1,x2,y2]
+                x1a,y1a = moustache.box_center(*eyes[0])
+                x2a,y2a = moustache.box_center(*eyes[1])
+                x1,y1,x2,y2 = moustache.markov_add(prev_e,(x1a,y1a,x2a,y2a))
+                prev_e = [x1a,y1a,x2a,y2a]
                 print " ",
             print ("%1d (%3d,%3d)--(%3d,%3d)" % (len(eyes),x1,y1,x2,y2))," "
             visor = moustache.scale_to(visor,width)
             visor = moustache.align_slope(visor,x1,y1,x2,y2)
             image = moustache.blit_draw(image,visor, (y1 + y2) / 2 + y, (x1 + x2) / 2 + x)
             if len(mouths) > 0:
-                prev_m = mouths[0]
+                prev_m = moustache.markov_add(prev_m,mouths[0])
             mx, my, mw, mh = prev_m
             #cv2.rectangle(image, (mx+x, my+y+height/2), (mx+x+mw, my+y+mh+height/2), mouthColor)
             mustache = moustache.scale_to(mustache, width)
@@ -262,7 +263,7 @@ def track_face(video):
                 for (x, y, width, height) in noses:
                     cv2.rectangle(image, (x, y), (x+width, y+height), noseColor)''' 
 
-            cv2.imwrite("tracked_images/image_%(number)03d.jpg" % {"number" : t}, image)
+            #cv2.imwrite("tracked_images/image_%(number)03d.jpg" % {"number" : t}, image)
             feature_test.write(image)
         else:
             break

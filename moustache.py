@@ -63,7 +63,9 @@ def blit_draw(src, overlay, face_y, face_x):
 	
 	return src
 	
-	
+def markov_add(old,next):
+	return numpy.array(next)
+	#return numpy.array(next) / 2 + numpy.array(old) / 2 
 	
 def translate(cord,scale,position):
 	return position + cord - (scale / 2)
