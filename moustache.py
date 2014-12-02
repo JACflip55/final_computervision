@@ -26,6 +26,8 @@ def blit_draw(src, overlay, face_y, face_x):
 	height, width = overlay.shape[:2]
 	d_height, d_width = src.shape[:2]
 	
+	# this section determines intersection zone for
+	# target and overlay, then grabs a view into it.
 	x1a = translate(0,width,face_x)
 	y1a = translate(0,height,face_y)
 	x2 = min(x1a+width,d_width)
@@ -43,29 +45,31 @@ def blit_draw(src, overlay, face_y, face_x):
 	
 	height, width = overlay.shape[:2]
 	
-	#main = numpy.zeros((height,width,3), dtype=numpy.uint8)
-	#alpha = numpy.zeros((height,width,), dtype=numpy.uint8)
-	#cv2.mixChannels(overlay,(main,alpha),(0,0,1,1,2,2,3,3))
-	b,g,r,a = cv2.split(overlay)
-	main = cv2.merge((b,g,r))
-	alpha = cv2.merge((a,a,a))
-	beta = 255 - alpha
+	# wanted to use mixChannels(), kept getting wierd errors.
+	'''main = numpy.zeros((height,width,3), dtype=numpy.uint8)
+	alpha = numpy.zeros((height,width,), dtype=numpy.uint8)
+	cv2.mixChannels(overlay,(main,alpha),(0,0,1,1,2,2,3,3))'''
+	b,g,r,a = cv2.split(overlay) # split out channels
+	main = cv2.merge((b,g,r))    # make color channels for overlay
+	alpha = cv2.merge((a,a,a))   # create alpha mask
+	beta = 255 - alphh           # create inverse alpha mask
 	
-	main_b = cv2.multiply(main,alpha,dtype=cv2.CV_16U)
-	main = cv2.convertScaleAbs(main_b,alpha=1.0/256)
+	main_b = cv2.multiply(main,alpha,dtype=cv2.CV_16U) # multiply overlay by mask, 8b*8b->16b
+	main = cv2.convertScaleAbs(main_b,alpha=1.0/256)   # scale back down from 16b->8b
 	
-	zoom_b = cv2.multiply(zoom,beta,dtype=cv2.CV_16U)
-	zoom[:,:,:] = cv2.convertScaleAbs(zoom_b,alpha=1.0/256)[:,:,:]
+	zoom_b = cv2.multiply(zoom,beta,dtype=cv2.CV_16U)  # multiply zoomed target by inverse, 8b*8b->16b
+	zoom[:,:,:] = cv2.convertScaleAbs(zoom_b,alpha=1.0/256)[:,:,:] # scale back down from 16b->8b
+	# the [:,:,:] is needed to force modification of the original, rather than returning a copy
 	
-	zoom += main
+	zoom += main # add overlay + target
 	
 	#cv2.imwrite("test_output/debug.png", zoom)
 	
 	return src
 	
 def markov_add(old,next):
-	return numpy.array(next)
-	#return numpy.array(next) / 2 + numpy.array(old) / 2 
+	#return numpy.array(next)
+	return numpy.array(next) / 2 + numpy.array(old) / 2 
 	
 def translate(cord,scale,position):
 	return position + cord - (scale / 2)
