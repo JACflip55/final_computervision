@@ -29,10 +29,6 @@ class TkFileDialogExample(Tkinter.Frame):
         self.chosen_eyes = tkFileDialog.askopenfilename(initialdir = 'Assets/Eyes/', title = 'Open Eye Image')
         fchosen_eyes = self.chosen_eyes
         print fchosen_eyes
-
-
-def get_assets(self):
-    return (chosen_mustache, chosen_eyes)
     
 def StartDialog():
     global fchosen_mustache

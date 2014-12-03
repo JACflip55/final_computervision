@@ -21,14 +21,14 @@ class TkFileDialogExample(Tkinter.Frame):
         global fchosen_mustache
         self.chosen_mustache = tkFileDialog.askopenfilename(initialdir = 'Assets/Mustaches/', title = 'Open Mustache Image')
         fchosen_mustache = self.chosen_mustache
-        print self.chosen_mustache
+        print fchosen_mustache
 
     def set_eye_piece(self):
         print "getting to eye piece"
         global fchosen_eyes
         self.chosen_eyes = tkFileDialog.askopenfilename(initialdir = 'Assets/Eyes/', title = 'Open Eye Image')
         fchosen_eyes = self.chosen_eyes
-        print self.chosen_eyes
+        print fchosen_eyes
 
 
 def get_assets(self):
