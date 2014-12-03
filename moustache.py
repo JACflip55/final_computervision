@@ -1,6 +1,8 @@
 import cv2
 import math
 import numpy
+import Tkinter
+import tkFileDialog
 
 def draw(src, overlay, face_y, face_x):
 	height, width = overlay.shape[:2]
@@ -108,7 +110,7 @@ def process_frame(frame):
 	face_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_frontalface_default.xml')
 	mouth_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_mcs_mouth.xml')
 	eye_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_eye.xml')
-	#snose_cascade = cv2.CascadeClassifier('haarcascade_mcs_nose.xml')
+	#snose_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_mcs_nose.xml')
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	
 	mustache = cv2.imread('Assets/Mustaches/CurlyMustache.png',-1)

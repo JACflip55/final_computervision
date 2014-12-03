@@ -3,6 +3,8 @@ import cv2.cv as cv
 import math
 import numpy as np
 import moustache
+import Tkinter
+import dialog
 
 def _ROI_tracking(frame, x_cord, height, y_cord, width):
     """
@@ -19,6 +21,7 @@ def _ROI_tracking(frame, x_cord, height, y_cord, width):
     roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
     cv2.normalize(roi_hist, roi_hist, 0, 180, cv2.NORM_MINMAX)
     return roi_hist
+
 
 def track_face(video):
     face_cascade = cv2.CascadeClassifier(
@@ -50,9 +53,11 @@ def track_face(video):
     prev_m = [0,0,0,0]
     prev_f = [0,0,0,0]
     
-    mustache_s = cv2.imread('Assets/Mustache/CurlyMustache.png',-1)
-    visor_s = cv2.imread('Assets/Eyes/visor.png',-1)
+    (chosen_mustache, chosen_eyes) = dialog.StartDialog()
     
+    mustache_s = cv2.imread(chosen_mustache,-1)
+    visor_s = cv2.imread(chosen_eyes,-1)
+
     while(1):
         if ret is True:
             mustache = mustache_s.copy()

@@ -108,13 +108,13 @@ def process_frame(frame):
 	face_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_frontalface_default.xml')
 	mouth_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_mcs_mouth.xml')
 	eye_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_eye.xml')
-	#snose_cascade = cv2.CascadeClassifier('haarcascade_mcs_nose.xml')
+	#snose_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_mcs_nose.xml')
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	
-	mustache = cv2.imread('Assets/CurlyMustache.png',-1)
-	monocle = cv2.imread('Assets/monocle.png',-1)
-	visor = cv2.imread('Assets/visor_b.png',-1)
-	target = cv2.imread('Assets/target.png',-1)
+	mustache = cv2.imread('Assets/Mustaches/CurlyMustache.png',-1)
+	monocle = cv2.imread('Assets/Eyes/monocle.png',-1)
+	visor = cv2.imread('Assets/Eyes/visor_b.png',-1)
+	target = cv2.imread('Assets/Eyes/target.png',-1)
 	
 	faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2,
                         minNeighbors=4,
