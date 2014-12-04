@@ -47,54 +47,10 @@ def selectROI(event, x, y, flags, param):
         
 def roi_selection():
     global frame, roiPts, inputMode
-    # initialize the termination criteria for cam shift, indicating
-    # a maximum of ten iterations or movement by a least one pixel
-    # along with the bounding box of the ROI
-    termination = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1)
-    roiBox = None
+
     
-    # if the see if the ROI has been computed
-    if roiBox is not None:
-        # convert the current frame to the HSV color space
-        # and perform mean shift
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        backProj = cv2.calcBackProject([hsv], [0], roiHist, [0, 180], 1)
-        # apply cam shift to the back projection, convert the
-        # points to a bounding box, and then draw them
-        (ret2, roiBox) = cv2.CamShift(backProj, roiBox, termination)
-        pts = np.int0(cv2.cv.BoxPoints(ret2))
-        cv2.polylines(frame, [pts], True, (0, 255, 0), 2)		
-    # show the frame and record if the user presses a key
-    cv2.imshow("Frame", frame)
-    key = cv2.waitKey(1) & 0xFF
-    # handle if the 'i' key is pressed, then go into ROI
-    # selection mode
-    if key == ord("i") and len(roiPts) < 4:
-        # indicate that we are in input mode and clone the
-        # frame
-        inputMode = True
-        orig = frame.copy()
-        # keep looping until 4 reference ROI points have
-        # been selected; press any key to exit ROI selction
-        # mode once 4 points have been selected
-        while len(roiPts) < 4:
-            cv2.imshow("Frame", frame)
-            cv2.waitKey(0)
-        # determine the top-left and bottom-right points
-        roiPts = np.array(roiPts)
-        sum_pts = roiPts.sum(axis = 1)
-        top_left = roiPts[np.argmin(sum_pts)]
-        bottom_right = roiPts[np.argmax(sum_pts)]
-        # grab the ROI for the bounding box and convert it
-        # to the HSV color space
-        roi = orig[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
-        roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-        #roi = cv2.cvtColor(roi, cv2.COLOR_BGR2LAB)
-        # compute a HSV histogram for the ROI and store the
-        # bounding box
-        roiHist = cv2.calcHist([roi], [0], None, [16], [0, 180])
-        roiHist = cv2.normalize(roiHist, roiHist, 0, 255, cv2.NORM_MINMAX)
-        roiBox = (top_left[0], top_left[1], bottom_right[0], bottom_right[1])
+
+    return frame
 
 def track_face(video, filename):
     face_cascade = cv2.CascadeClassifier(
@@ -124,7 +80,7 @@ def track_face(video, filename):
     frame_height, frame_width, frame_layers = image.shape
     fourcc = cv.CV_FOURCC('M', 'P', '4', 'V')
     print filename
-    feature_test = cv2.VideoWriter('Overlaid Videos/',filename,'.mov', 
+    overylaid_video = cv2.VideoWriter('Overlaid Videos/' + filename, 
         fourcc, 30, (frame_width, frame_height))
     
     prev_e = [0, 0, 0, 0]
@@ -133,7 +89,14 @@ def track_face(video, filename):
     
     # setup the mouse callback
     cv2.namedWindow("Overlayed Video")
-    #cv2.setMouseCallback("Frame", selectROI)
+    cv2.namedWindow("Frame")
+    cv2.setMouseCallback("Frame", selectROI)
+    
+    # initialize the termination criteria for cam shift, indicating
+    # a maximum of ten iterations or movement by a least one pixel
+    # along with the bounding box of the ROI
+    termination = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1)
+    roiBox = None
     
     (chosen_mustache, chosen_eyes) = dialog.StartDialog()
     
@@ -143,16 +106,57 @@ def track_face(video, filename):
     while(1):
         if not ret:
             break
-        framre = image.copy()
+        frame = image.copy()
+        
         
         #this is intended to be the method that keeps track of the
         #user selected ROI however, it is very broken and does not
         #track accurately and 
-        roi_selection()
+        # if the see if the ROI has been computed
+        if roiBox is not None:
+            # convert the current frame to the HSV color space
+            # and perform mean shift
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            backProj = cv2.calcBackProject([hsv], [0], roiHist, [0, 180], 1)
+            # apply cam shift to the back projection, convert the
+            # points to a bounding box, and then draw them
+            (ret2, roiBox) = cv2.CamShift(backProj, roiBox, termination)
+            pts = np.int0(cv2.cv.BoxPoints(ret2))
+            cv2.polylines(frame, [pts], True, (0, 255, 0), 2)		
+        # show the frame and record if the user presses a key
+        cv2.imshow("Frame", frame)
+        key = cv2.waitKey(1) & 0xFF
+        # handle if the 'i' key is pressed, then go into ROI
+        # selection mode
+        if key == ord("i") and len(roiPts) < 4:
+            # indicate that we are in input mode and clone the
+            # frame
+            inputMode = True
+            orig = frame.copy()
+            # keep looping until 4 reference ROI points have
+            # been selected; press any key to exit ROI selction
+            # mode once 4 points have been selected
+            while len(roiPts) < 4:
+                cv2.imshow("Frame", frame)
+                cv2.waitKey(0)
+            # determine the top-left and bottom-right points
+            roiPts = np.array(roiPts)
+            sum_pts = roiPts.sum(axis = 1)
+            top_left = roiPts[np.argmin(sum_pts)]
+            bottom_right = roiPts[np.argmax(sum_pts)]
+            # grab the ROI for the bounding box and convert it
+            # to the HSV color space
+            roi = orig[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+            roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+            #roi = cv2.cvtColor(roi, cv2.COLOR_BGR2LAB)
+            # compute a HSV histogram for the ROI and store the
+            # bounding box
+            roiHist = cv2.calcHist([roi], [0], None, [16], [0, 180])
+            roiHist = cv2.normalize(roiHist, roiHist, 0, 255, cv2.NORM_MINMAX)
+            roiBox = (top_left[0], top_left[1], bottom_right[0], bottom_right[1])
         
         mustache = mustache_s.copy()
         visor = visor_s.copy()
-        #roi_overlay = overlay_image.copy()
 
         
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -205,10 +209,10 @@ def track_face(video, filename):
         # cv2.imwrite("tracked_images/image_%(number)03d.jpg" % {"number" : t}, image)
         cv2.imshow("Overlayed Video", image)
         cv2.waitKey(1)
-        feature_test.write(image)
+        overylaid_video.write(image)
         t += 1
         ret, image = video.read()
 
     cv2.destroyAllWindows()
     video.release()
-    feature_test.release()
+    overylaid_video.release()
